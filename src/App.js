@@ -1,24 +1,23 @@
 import './App.css';
-import logo from './dc-logo.png';
 import MemoryCard from './components/MemoryCard';
 import React, { Component } from 'react';
 
-const generateDeck = () => {
+function generateDeck() {
   const symbols = ['∆', 'ß', '£', '§', '•', '$', '+', 'ø'];
-  const Deck = [];
-  for (let i = 1; i <= 16; i++) {
-    Deck.push({ isFlipped: false, symbol: symbols[i % 8] });
+  const deck = [];
+  for (let i = 0; i < 16; i++) {
+    deck.push({
+      isFlipped: false,
+      symbol: symbols[i % 8],
+    });
   }
-  return shuffle(Deck);
-};
+  return shuffle(deck);
+}
 
 function shuffle(a) {
-  var j, x, i;
-  for (i = a.length - 1; i > 0; i--) {
-    j = Math.floor(Math.random() * (i + 1));
-    x = a[i];
-    a[i] = a[j];
-    a[j] = x;
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
 }
@@ -26,54 +25,71 @@ function shuffle(a) {
 class App extends Component {
   constructor(props) {
     super(props);
+
     this.state = {
       deck: generateDeck(),
       pickedCards: [],
-      newPickedCards: [],
     };
   }
 
   pickCard(cardIndex) {
-    if (this.state.deck[cardIndex].isFlipped === true) {
-      console.log('isFlipped');
+    if (this.state.deck[cardIndex].isFlipped) {
       return;
     }
-    const cardToFlip = { ...this.state.deck[cardIndex], isFlipped: true };
+    const cardToFlip = { ...this.state.deck[cardIndex] };
+    cardToFlip.isFlipped = true;
 
     let newPickedCards = this.state.pickedCards.concat(cardIndex);
     const newDeck = this.state.deck.map((card, index) => {
       if (cardIndex === index) {
-        console.log(cardToFlip);
         return cardToFlip;
       }
       return card;
     });
-    console.log(newPickedCards);
+
     if (newPickedCards.length === 2) {
       const card1Index = newPickedCards[0];
       const card2Index = newPickedCards[1];
       if (newDeck[card1Index].symbol !== newDeck[card2Index].symbol) {
-        console.log('unfilp cards');
+        setTimeout(() => {
+          this.unflipCards(card1Index, card2Index);
+        }, 1000);
       }
       newPickedCards = [];
-      console.log(newPickedCards);
     }
-    return this.setState({ deck: newDeck, pickedCards: newPickedCards });
+
+    this.setState({
+      deck: newDeck,
+      pickedCards: newPickedCards,
+    });
   }
 
   unflipCards(card1Index, card2Index) {
-    const card1 = { ...this.state.deck[card1Index], isFlipped: false };
-    const card2 = { ...this.state.deck[card2Index], isFlipped: false };
-    let newDeck = this.state.deck.map(())
+    const card1 = { ...this.state.deck[card1Index] };
+    const card2 = { ...this.state.deck[card2Index] };
+    card1.isFlipped = false;
+    card2.isFlipped = false;
+
+    const newDeck = this.state.deck.map((card, index) => {
+      if (card1Index === index) {
+        return card1;
+      }
+      if (card2Index === index) {
+        return card2;
+      }
+      return card;
+    });
+
+    this.setState({ deck: newDeck });
   }
 
   render() {
     const cardsJSX = this.state.deck.map((card, index) => {
       return (
         <MemoryCard
+          key={index}
           symbol={card.symbol}
           isFlipped={card.isFlipped}
-          key={index}
           pickCard={this.pickCard.bind(this, index)}
         />
       );
@@ -82,13 +98,15 @@ class App extends Component {
     return (
       <div className='App'>
         <header className='App-header'>
-          <h2>Memory Game</h2>
-          <h3>Match cards to win !</h3>
+          <h1>Memory Game</h1>
+          <h3>Match cards to win</h3>
         </header>
-        <div>{cardsJSX.slice(0, 4)}</div>
-        <div>{cardsJSX.slice(4, 8)}</div>
-        <div>{cardsJSX.slice(8, 12)}</div>
-        <div>{cardsJSX.slice(12, 16)}</div>
+        <div className='App-cards'>
+          {cardsJSX.slice(0, 4)}
+          {cardsJSX.slice(4, 8)}
+          {cardsJSX.slice(8, 12)}
+          {cardsJSX.slice(12, 16)}
+        </div>
       </div>
     );
   }
